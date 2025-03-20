@@ -2,27 +2,42 @@ import json
 import os
 
 def read_data(filename):
-    if os.path.exists(filename):
-        with open("./data/" + filename, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    else:
-        return {"standard_questions": [], "spam_questions": []}
-def write_data(filename, data):
-    with open("./data/" + filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    filepath = "./data/" + filename
+    if os.path.exists(filepath):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return {"standard_questions": [], "spam_questions": []}
+    return {"standard_questions": [], "spam_questions": []}
 
-def add_question(data, category, question):
+def write_data(filename, data):
+    filepath = "./data/" + filename
+    existing_data = read_data(filename)
+    
+    # ترکیب داده‌های قبلی و جدید
+    existing_data['standard_questions'].extend(data.get('standard_questions', []))
+    existing_data['spam_questions'].extend(data.get('spam_questions', []))
+    
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(existing_data, f, ensure_ascii=False, indent=4)
+
+def add_question(category, question):
+    filename = 'questions_dataset.json'
+    new_data = {"standard_questions": [], "spam_questions": []}
+    
     if category == '1':
-        data['standard_questions'].append(question)
+        new_data['standard_questions'].append(question)
     elif category == '2':
-        data['spam_questions'].append(question)
+        new_data['spam_questions'].append(question)
     else:
         print("Category Invalid")
+        return
+    
+    write_data(filename, new_data)
+    print("Question added")
 
 def cli_menu():
-    filename = 'questions_dataset.json'
-    data = read_data(filename)
-
     while True:
         os.system('clear')
         print("1. Correct Question's")
@@ -32,9 +47,7 @@ def cli_menu():
 
         if choice in ['1', '2']:
             question = input("Question text: ")
-            add_question(data, choice, question)
-            write_data(filename, data)
-            print("Question added")
+            add_question(choice, question)
         elif choice == '3':
             break
         else:
@@ -42,4 +55,3 @@ def cli_menu():
 
 if __name__ == "__main__":
     cli_menu()
-
